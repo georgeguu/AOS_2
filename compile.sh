@@ -12,5 +12,5 @@ mv Node.class ./bin/;
 javac Parseconfig.java;
 mv Parseconfig.class ./bin/;
 
-javac parseFile_test.java;
+javac Server.java;
 # java Server2;

@@ -14,7 +14,7 @@ CONFIGSERVER=$PROJDIR/config.txt
 BINDIR=$PROJDIR
 
 # Your main project class
-PROG=parseFile_test
+PROG=Server
 
 n=0
 
