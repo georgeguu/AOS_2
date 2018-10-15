@@ -1,11 +1,9 @@
 package bin;
-public class Node implements java.io.Serializable{
+
+public class Node{
     private int nodeId;
     private String host;
     private String port;
-    private Node root;
-    private Node parent;
-    private Node[] children;
     
     public Node(int index, String hostName, String port){
         this.nodeId = index;
@@ -28,5 +26,4 @@ public class Node implements java.io.Serializable{
     public int getPort(){
         return Integer.parseInt(port);
     }
-
 }

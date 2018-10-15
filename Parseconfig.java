@@ -1,4 +1,4 @@
-package aos;
+package bin;
 
 // import Node;
 import java.io.BufferedReader;
@@ -18,6 +18,9 @@ public class Parseconfig {
     private ArrayList<Node> hosts;
     private ArrayList<Node> neighbors;
     private Node myNode;
+    private int[] intArray;
+    private int rootid;
+    private Node root;
     
     public Parseconfig(int nodeId, String relativePath){
         this.nodeId = nodeId;
@@ -51,14 +54,12 @@ public class Parseconfig {
     }
 
 	private void loadConfig(){
-        
-        Charset charset = Charset.forName("UTF-8");
+                Charset charset = Charset.forName("UTF-8");
         try (BufferedReader reader = Files.newBufferedReader(file, charset)) {
             String line = null;
             int n = 0;
             
             // to get the number of nodes (numOfNode)
-            // We use while loop to see if there are white spaces at the beginning of the config.txt
             //............................................................
             while ((line = reader.readLine()) != null) {
                 line = line.replaceAll("#.*",""); 
@@ -68,12 +69,23 @@ public class Parseconfig {
                 break;
             }
             
-            System.out.println("Number of nodes: "+ getNumOfNode());
+            System.out.println("Number of nodes: "+ numOfNode);
             n = numOfNode;
             //............................................................
             
-            hosts = new ArrayList<>(numOfNode);
+            while ((line = reader.readLine()) != null) {
+                line = line.replaceAll("#.*",""); 
+                if(line.length() == 0)
+                    continue;
+                rootid = Integer.parseInt(line);
+                System.out.println("RootID: "+ rootid);
+                //this.root = hosts.get(rootid);
+                break;
+            }
+      
+            //System.out.println("Root node: "+ root.configToSring());
             
+            hosts = new ArrayList<>(numOfNode);
             int currentId=1;
             
             // Load host list.
@@ -87,53 +99,44 @@ public class Parseconfig {
                 Node host = new Node(currentId, hostInfo[0], hostInfo[1]);
 				hosts.add(host);
 				//String[] neighborIds = hostInfo[2].split("\\s+");
+				//System.out.println("CurrentId: "+ currentId);
 			    if( currentId == nodeId){
-                    //this.myNode = hosts.get(currentId);
+			    	//System.out.println("CurrentId: "+ currentId);
+                    this.myNode = hosts.get(currentId-1);
 
-//                    neighbors = new ArrayList<>();
-//                    Node node = hosts.get(nodeId);
-//                    neighbors.add(node);
-//                    for(int i = 3; i < hostInfo.length; i++){
-//                        int id = Integer.parseInt(hostInfo[i]);
-//                        node = hosts.get(id);
-//                        neighbors.add(node);
-//                    }
+                    //neighbors = new ArrayList<>();
+                    //Node node = hosts.get(currentId-1);
+                    //neighbors.add(node);
+                    intArray=new int[hostInfo.length-2];
+                    for(int i = 2; i <  hostInfo.length ; i++){
+                       int id = Integer.parseInt(hostInfo[i]);
+                       
+                       intArray[i-2] = id;
+                       //System.out.println("intArray: "+ intArray[i-2]);
+                       
+                    }
                  }
 			    
 				 currentId++;
                  n--;
             }
+//            System.out.println("test");
+//            for(int i = 0; i <  intArray.length ; i++){
+//            	
+//                System.out.println("intArray: "+ intArray[i]);
+//                
+//             }
+            neighbors = new ArrayList<>();
+            for(int i = 0; i < intArray.length; i++){
+                int id = intArray[i];
+                Node node = hosts.get(id-1);
+                neighbors.add(node);
+            }
+            
             if(n != 0){
                 throw new IOException("Insufficent valid lines in config file.");
             }
             
-            /*
-            n = numOfNode;
-            
-            // Load neighbors
-            while ((line = reader.readLine()) != null && n != 0) {
-                line = line.replaceAll("#.*","");  
-                if(line.length() == 0)
-                    continue;
-                String[] neighborIds = line.split("\\s+");
-                int currentId = Integer.parseInt(neighborIds[0]);
-                
-                if( currentId == nodeId){
-                    this.myNode = hosts.get(currentId);
-
-                    neighbors = new ArrayList<>();
-                    for(int i = 1; i < neighborIds.length; i++){
-                        int id = Integer.parseInt(neighborIds[i]);
-                        Node node = hosts.get(id);
-                        neighbors.add(node);
-                    }
-                }
-                n--;
-            }
-            if(n != 0){
-                throw new IOException("Insufficent valid lines in config file.");
-            }
-            */
             
             if(neighbors == null){
                 throw new NullPointerException("Expect adjacent neighbors for node " + nodeId);
