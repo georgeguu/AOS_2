@@ -1,6 +1,5 @@
 package bin;
-
-public class Node{
+public class Node implements java.io.Serializable{
     private int nodeId;
     private String host;
     private String port;
