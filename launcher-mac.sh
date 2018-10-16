@@ -22,6 +22,8 @@ cat $CONFIGLOCAL | sed -e "s/#.*//" | sed -e "/^\s*$/d" |
 (
     read i
     echo $i
+    i=$(( i + 1 ))
+
     while [[ $n -lt $i ]]
     do
         read line
@@ -30,7 +32,7 @@ cat $CONFIGLOCAL | sed -e "s/#.*//" | sed -e "/^\s*$/d" |
         port=$( echo $line | awk '{ print $2 }' ) # port
         
         osascript -e 'tell app "Terminal"
-        do script "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no '$netid@$host' java -cp '$BINDIR' '$PROG' '$port' '$n' '$CONFIGSERVER'"
+        do script "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no '$netid@$host.utdallas.edu' java -cp '$BINDIR' '$PROG' '$port' '$n' '$CONFIGSERVER'"
         end tell' 
         n=$(( n + 1 ))
     done

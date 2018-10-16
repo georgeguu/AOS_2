@@ -18,22 +18,20 @@ public class Parseconfig {
     private ArrayList<Node> hosts;
     private ArrayList<Node> neighbors;
     private Node myNode;
+    private String myHost;
+    private int myPort;
     private int[] intArray;
     private int rootid;
     private Node root;
     
     public Parseconfig(int nodeId, String relativePath){
         this.nodeId = nodeId;
-        //this.path = Paths.get(relativePath);
         this.file = Paths.get(relativePath).toAbsolutePath();
-        //System.out.println(path.toString());
-        
-        // Load file
+
         loadConfig();
-        
     }
     
-    public int getnodeId(){
+    public int getNodeId(){
         return this.nodeId;
     }
     public int getNumOfNode() {
@@ -45,7 +43,13 @@ public class Parseconfig {
     public ArrayList<Node> getHosts(){
         return this.hosts;
     }
-
+    public String getMyHost(){
+        return this.myHost;
+    }
+    public int getRootId(){
+        return this.rootid;
+    }
+    
     public ArrayList<Node> getNeighbors() {
         return this.neighbors;
     }
@@ -54,7 +58,7 @@ public class Parseconfig {
     }
 
     private void loadConfig(){
-                Charset charset = Charset.forName("UTF-8");
+    Charset charset = Charset.forName("UTF-8");
         try (BufferedReader reader = Files.newBufferedReader(file, charset)) {
             String line = null;
             int n = 0;
@@ -97,14 +101,15 @@ public class Parseconfig {
                 
                 String[] hostInfo = line.split("\\s+");
                 
-                Node host = new Node(currentId, hostInfo[0], hostInfo[1]);
+                Node host = new Node(currentId, hostInfo[0], Integer.parseInt(hostInfo[1]), this.rootid);
                 hosts.add(host);
                 //String[] neighborIds = hostInfo[2].split("\\s+");
                 //System.out.println("CurrentId: "+ currentId);
                 if( currentId == nodeId){
                     //System.out.println("CurrentId: "+ currentId);
                     this.myNode = hosts.get(currentId-1);
-
+                    this.myHost = hosts.get(currentId-1).getHostName();
+                    this.myPort = hosts.get(currentId-1).getPort();
                     //neighbors = new ArrayList<>();
                     //Node node = hosts.get(currentId-1);
                     //neighbors.add(node);
@@ -121,12 +126,6 @@ public class Parseconfig {
                  currentId++;
                  n--;
             }
-//            System.out.println("test");
-//            for(int i = 0; i <  intArray.length ; i++){
-//              
-//                System.out.println("intArray: "+ intArray[i]);
-//                
-//             }
             neighbors = new ArrayList<>();
             for(int i = 0; i < intArray.length; i++){
                 int id = intArray[i];
@@ -150,21 +149,21 @@ public class Parseconfig {
         }
     }
     
-    public void printConfig(int nodeID){
-        System.out.println(String.format("-------Node %d Configuration-----", nodeId));
-        // Print hosts 
-        System.out.println("-----Host List-----");
-        for(Node node : hosts){
-            System.out.println(node.configToSring());
-        }
+    // public void printConfig(int nodeID){
+    //     System.out.println(String.format("-------Node %d Configuration-----", nodeId));
+    //     // Print hosts 
+    //     System.out.println("-----Host List-----");
+    //     for(Node node : hosts){
+    //         System.out.println(node.configToSring());
+    //     }
         
-        System.out.println("-----Neighbor List-----");
-        // Print neighbors
-        for(Node node : neighbors){
-            System.out.println(node.configToSring());
-        }
-        System.out.println("-----End of Configuration-----");
-    }
+    //     System.out.println("-----Neighbor List-----");
+    //     // Print neighbors
+    //     for(Node node : neighbors){
+    //         System.out.println(node.configToSring());
+    //     }
+    //     System.out.println("-----End of Configuration-----");
+    // }
   
 }
 

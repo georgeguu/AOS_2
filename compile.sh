@@ -12,5 +12,8 @@ mv Node.class ./bin/;
 javac Parseconfig.java;
 mv Parseconfig.class ./bin/;
 
+javac Message.java;
+mv Message.class ./bin/;
+
 javac Server.java;
 # java Server2;
