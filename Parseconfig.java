@@ -11,8 +11,8 @@ import java.util.ArrayList;
 
 public class Parseconfig {
     
-	private int numOfNode;
-	//private Path path;
+    private int numOfNode;
+    //private Path path;
     private Path file;
     private int nodeId;
     private ArrayList<Node> hosts;
@@ -37,8 +37,8 @@ public class Parseconfig {
         return this.nodeId;
     }
     public int getNumOfNode() {
-		return this.numOfNode;
-	}
+        return this.numOfNode;
+    }
     public Node getmyNode() {
         return this.myNode;
     }   
@@ -46,14 +46,14 @@ public class Parseconfig {
         return this.hosts;
     }
 
-	public ArrayList<Node> getNeighbors() {
-		return this.neighbors;
-	}
+    public ArrayList<Node> getNeighbors() {
+        return this.neighbors;
+    }
     public int getNeighborsCnt() {
         return this.neighbors.size();
     }
 
-	private void loadConfig(){
+    private void loadConfig(){
                 Charset charset = Charset.forName("UTF-8");
         try (BufferedReader reader = Files.newBufferedReader(file, charset)) {
             String line = null;
@@ -73,6 +73,7 @@ public class Parseconfig {
             n = numOfNode;
             //............................................................
             
+            // to get the root id for building a spinning tree
             while ((line = reader.readLine()) != null) {
                 line = line.replaceAll("#.*",""); 
                 if(line.length() == 0)
@@ -97,11 +98,11 @@ public class Parseconfig {
                 String[] hostInfo = line.split("\\s+");
                 
                 Node host = new Node(currentId, hostInfo[0], hostInfo[1]);
-				hosts.add(host);
-				//String[] neighborIds = hostInfo[2].split("\\s+");
-				//System.out.println("CurrentId: "+ currentId);
-			    if( currentId == nodeId){
-			    	//System.out.println("CurrentId: "+ currentId);
+                hosts.add(host);
+                //String[] neighborIds = hostInfo[2].split("\\s+");
+                //System.out.println("CurrentId: "+ currentId);
+                if( currentId == nodeId){
+                    //System.out.println("CurrentId: "+ currentId);
                     this.myNode = hosts.get(currentId-1);
 
                     //neighbors = new ArrayList<>();
@@ -116,13 +117,13 @@ public class Parseconfig {
                        
                     }
                  }
-			    
-				 currentId++;
+                
+                 currentId++;
                  n--;
             }
 //            System.out.println("test");
 //            for(int i = 0; i <  intArray.length ; i++){
-//            	
+//              
 //                System.out.println("intArray: "+ intArray[i]);
 //                
 //             }
@@ -150,19 +151,20 @@ public class Parseconfig {
     }
     
     public void printConfig(int nodeID){
-		System.out.println(String.format("Node %d Configuration", nodeId));
+        System.out.println(String.format("-------Node %d Configuration-----", nodeId));
         // Print hosts 
-        System.out.println("Host List:");
-		for(Node node : hosts){
+        System.out.println("-----Host List-----");
+        for(Node node : hosts){
             System.out.println(node.configToSring());
         }
         
-		System.out.println("Neighbor List:");
+        System.out.println("-----Neighbor List-----");
         // Print neighbors
         for(Node node : neighbors){
             System.out.println(node.configToSring());
         }
-		System.out.println("End of Configuration..........");
+        System.out.println("-----End of Configuration-----");
     }
   
 }
+

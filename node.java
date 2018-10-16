@@ -24,5 +24,6 @@ public class Node implements java.io.Serializable{
     
     public int getPort(){
         return Integer.parseInt(port);
+
     }
-}
+}   
