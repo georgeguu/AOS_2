@@ -7,21 +7,24 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.io.Serializable;
 
-public class Message implements java.io.Serializable{
 
-    Node origin;
-    Node destination;
+public class Message implements Serializable{
+
+    private Node origin;
+    private Node destination;
     // int [] distance;
-    String type;
+    private byte[] type;
     // public int[] getDistance(){
     //     return this.distance;
     // }
-    public Message(Node newOrg, Node newDst, String type)
+    public Message(Node newOrg, Node newDst, String str)
     {   
         this.origin = newOrg;
         this.destination = newDst;
-        this.type = type;
+        this.type = str.getBytes();
+
     }
 
     public Node getOrigin(){
@@ -32,8 +35,14 @@ public class Message implements java.io.Serializable{
         return this.destination;
     }
 
+    public String getType(){
+        return (new String(this.type));
+    }
+
     public void getMsgAsString(){
-        System.out.println("origin:"+origin.getNodeId()+" to "+destination.getNodeId()+",Msg:" + type);
+        System.out.println("origin:"+origin.getNodeId()+" to "+destination.getNodeId()+",Msg:" + new String(this.type));
+        // System.out.println("origin:"+origin.getNodeId()+" to "+destination.getNodeId());
+
         return;
     }
     // public void setDestination(Node destination){

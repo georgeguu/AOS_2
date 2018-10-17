@@ -15,6 +15,10 @@ public class Server
     private static long timeoutSec = 5;
     public static void main(String[] args) throws IOException
     {
+
+        // ConcurrentLinkedQueue<Message> queue = new ConcurrentLinkedQueue<Message>();
+
+
         if (args.length != 3)
         {
             throw new IllegalArgumentException("Please enter port#, node ID and config file path");
@@ -29,8 +33,9 @@ public class Server
         // Process config.txt info. into myNode, shall let every process and thread can access this.
         Node myNode = new Node(config.getNodeId(), config.getMyHost(), portNum, config.getRootId());
         myNode.setNeiborNodes(config.getNeighbors());
+        System.out.println("Node: "+ myNode.getNodeId());
 
-        myNode.printConfig();
+
 
         Thread serverFactory = new ServerFactory(myNode);
         serverFactory.start();
@@ -40,6 +45,7 @@ public class Server
 
         if(myNode.isRoot())
         {
+            myNode.setIsRoot(true);
             Thread clientT = new ClientHandler(myNode);
             clientT.start();
         }else{
@@ -119,21 +125,39 @@ class ServerThread extends Thread{
                 incomingMsg = new ObjectInputStream(s.getInputStream()); 
                 ObjectOutputStream returnMsg = new ObjectOutputStream(s.getOutputStream());
 
-                System.out.println("New connection");
+                // System.out.println("New connection");
 
 
                 newComingObj = (Message) incomingMsg.readObject();
-                System.out.println("Received msg from: " + newComingObj.getOrigin().getNodeId() + "\n");
+                System.out.println("Received msg from: " + newComingObj.getOrigin().getNodeId() + ", Message: "+ newComingObj.getType());
                 // queue.add(newComingObj);
-                newComingObj.getMsgAsString();
+                // newComingObj.getMsgAsString();
 
-                if(!myNode.isParentSet()){
+                if(!myNode.isParent() && !myNode.isRoot()){
+                    System.out.println("Replied received msg to: " + newComingObj.getOrigin().getNodeId() + ", Message: PACK");
+
+                    myNode.setParent(newComingObj.getOrigin());
+                    myNode.popParentFromNeighbors(newComingObj.getOrigin());
+                    // System.out.println("After pop neiborhood num" + myNode.getNeighbors().size());
                     Message msg = new Message(myNode, newComingObj.getOrigin(), "PACK");
                     returnMsg.writeObject(msg);
+
+                    
+                    Thread clientH = new ClientHandler(myNode);
+                    clientH.start();
+                    
+                    //Brocast to neiborhood;
+
+                }else{
+                    System.out.println("Replied received msg to: " + newComingObj.getOrigin().getNodeId() + ", Message: NACK");
+                    Message msg = new Message(myNode, newComingObj.getOrigin(), "NACK");
+                    returnMsg.writeObject(msg);                    
                 }
                 // returnMsg.writeChars("PACK");
                 // returnMsg.flush();
                 
+                // myNode.printConfig();
+
                 break;             
                   
             }
@@ -175,6 +199,7 @@ class ClientHandler extends Thread
     // private sendCount;
   
     // Constructor 
+    Message response;
     public ClientHandler(Node myNode)  
     { 
         this.myNode = myNode;
@@ -189,12 +214,36 @@ class ClientHandler extends Thread
                 outputStream = new ObjectOutputStream(socket.getOutputStream());
                 outputStream.writeObject(msg);
 
+
                 try{
                     // try{
                     inputStream = new ObjectInputStream(socket.getInputStream());
-                    Message response = (Message) inputStream.readObject();
+                    response = (Message) inputStream.readObject();
                     // System.out.println("Message: " + response.);
-                    response.getMsgAsString();
+                    // response.getMsgAsString();
+                    // System.out.println(response.getType().getBytes());
+                    // System.out.println(("PACK").getClass());
+                    // System.out.println("PACK");
+
+                    // System.out.println(response.getType().getClass());
+                    // System.out.println(response.getType());
+
+                    
+                    if((String)response.getType().intern() == ("PACK").intern()){
+                        //add to children
+                        System.out.println("Received Pack from: " + response.getOrigin().getNodeId());
+
+                        myNode.addToChildren(response.getOrigin());
+
+                    }else if(response.getType().intern() == "NACK".intern()){
+
+                        System.out.println("Received Pack from: " + response.getOrigin().getNodeId());
+
+                    }
+                    // myNode.incrementAck();
+
+                    myNode.addAckToQueue(response);
+                    // this.myNode.printConfig();
 
                     // }
                     // String response = (String) inputStream.readObject();
@@ -231,9 +280,52 @@ class ClientHandler extends Thread
     public void run()  
     {
         for(int i = 0;i < this.myNode.getNeighbors().size(); i++){
+            System.out.println("Send Explore to:"+ myNode.getNeighbors().get(i).getNodeId());
+
             Node targetNode = this.myNode.getNeighbors().get(i);
             Message firstMessage = new Message(myNode, targetNode, "Explore");
             sendMsg(firstMessage);
+
+        }
+
+        // this.myNode.printConfig();
+
+        while(true){
+            // if(numOfSendCnt == this.currentTable.getConfig().getNumOfNode()-1){
+            //     // System.out.println("==========End=========");
+            //     // System.out.println("For node:" + this.currentTable.getNodeId());
+            //     // System.out.println("Your result: "+ Arrays.toString(this.currentTable.getMsg().getDistance()));
+            //     // return;
+
+            // }
+            if(myNode.getQueueSize() == myNode.getNeighborsCnt()){
+                System.out.println("********End*******");
+                this.myNode.printConfig();
+                // System.exit(0); 
+                return;
+            }
+            // fetchMsg = queue.poll();
+            // if(fetchMsg == null){
+
+            // }else{
+            //     System.out.println("Original table:" + Arrays.toString(this.currentTable.getMsg().getDistance()));
+            //     System.out.println("Going to merge this msg:" + Arrays.toString(fetchMsg.getDistance()));
+            //     this.currentTable.updateTable(fetchMsg);
+            //     numOfMergeTimes++;
+            //     if(numOfMergeTimes == this.neiborhoodNum){
+            //         System.out.println("Merge successful! Send out!:" + Arrays.toString(this.currentTable.getMsg().getDistance()));
+            //         for(int i = 0;i < this.neiborhoodNum;i++){
+
+            //             Node targetNode = this.currentTable.getConfig().getNeighbors().get(i);
+
+            //             this.sendMsg(this.currentTable.getMsg(), targetNode);
+                        
+            //         }
+            //         numOfMergeTimes = 0;
+            //         numOfSendCnt++;
+
+            //     }
+            // }
         }
 
     }

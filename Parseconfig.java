@@ -73,7 +73,7 @@ public class Parseconfig {
                 break;
             }
             
-            System.out.println("Number of nodes: "+ numOfNode);
+            // System.out.println("Number of nodes: "+ numOfNode);
             n = numOfNode;
             //............................................................
             
@@ -83,7 +83,7 @@ public class Parseconfig {
                 if(line.length() == 0)
                     continue;
                 rootid = Integer.parseInt(line);
-                System.out.println("RootID: "+ rootid);
+                // System.out.println("RootID: "+ rootid);
                 //this.root = hosts.get(rootid);
                 break;
             }
