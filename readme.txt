@@ -3,7 +3,7 @@ chmod +x compile.sh launcher.sh cleanup.sh
 
 if you want to open indivisual terminal for each machine:
 	1. log into "engnx.utdallas.edu" using NoMachine with SSH connection type
-	2. open a konsole (terminal does not work ) and the machine name should be {engnx12:~}
+	2. open a konsole (terminal does not work ) and the machine's name in the command line should be {engnx12:~}
 	3. go to your current directory
 
 How to compile:
@@ -18,8 +18,8 @@ How to compile:
 
 How to distribute programs to each machine:
 	1. type ./launcher (change the content to fix your case)
-	2. multiple terminal should pop out
-	3. type ./cleanup.sh (shuld be done before you run launcher for next time)
+	2. multiple terminals should pop out
+	3. type ./cleanup.sh (shuld be done before you run launcher.sh for next time)
 
 
 
