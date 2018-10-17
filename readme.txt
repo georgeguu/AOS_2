@@ -21,6 +21,13 @@ How to distribute programs to each machine:
 	2. multiple terminals should pop out
 	3. type ./cleanup.sh (shuld be done before you run launcher.sh for next time)
 
+	
+if there is an error message ")syntax error: invalid arithmetic operator (error token is " when running launcher.sh
+	edit a new config.txt
+	
+if there is an error when running compile.sh
+    edit a new compile.sh
+
 
 
 	

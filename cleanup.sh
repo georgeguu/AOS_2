@@ -6,7 +6,7 @@ netid=gxg171430
 
 #
 # Root directory of your project
-PROJDIR=/home/010/g/gx/gxg171430/CS6378/AOS1
+PROJDIR=/home/010/g/gx/gxg171430/CS6378/AOS2
 
 #
 # Directory where the config file is located on your local system
