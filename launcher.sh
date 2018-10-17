@@ -7,24 +7,24 @@ netid=gxg171430
 PROJDIR=/home/010/g/gx/gxg171430/CS6378/AOS2
 
 # Directory where the config file is located on your local system
-CONFIGLOCAL=$PROJDIR/config.txt
+CONFIGLOCAL=/home/010/g/gx/gxg171430/CS6378/AOS2/config.txt
 
-CONFIGSERVER=$PROJDIR/config.txt
+CONFIGSERVER=/home/010/g/gx/gxg171430/CS6378/AOS2/config.txt
 # Directory your java classes are in
 BINDIR=$PROJDIR
 
 # Your main project class
-PROG=parseFile_test
+PROG=Server
 
 n=1
 
 cat $CONFIGLOCAL | sed -e "s/#.*//" | sed -e "/^\s*$/d" |
 (
     read i
+    i=$(( i + 1 ))
     echo $i
-	i=$(( i + 1 ))
-	#read root
-    #echo $root
+    read root
+    echo $root
     while [[ $n -lt $i ]]
     do
         read line
@@ -32,7 +32,7 @@ cat $CONFIGLOCAL | sed -e "s/#.*//" | sed -e "/^\s*$/d" |
         host=$( echo $line | awk '{ print $1 }' )
         port=$( echo $line | awk '{ print $2 }' ) # port
 
-    bash -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $netid@$host.utdallas.edu java -cp $BINDIR $PROG $port $n $CONFIGSERVER; exec bash" &
+    xterm -hold -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $netid@$host.utdallas.edu java -cp $BINDIR $PROG $port $n $CONFIGSERVER; exec bash" &
 
         n=$(( n + 1 ))
     done
