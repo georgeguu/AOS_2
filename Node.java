@@ -10,6 +10,8 @@ public class Node implements java.io.Serializable{
     private int nodeId;
     private int port;
     private Boolean isRoot;
+    private Boolean isTreeFinish;
+
     private String host;
 
     private Boolean isParent;
@@ -28,6 +30,7 @@ public class Node implements java.io.Serializable{
         this.isRoot = (rootId == this.nodeId) ? true : false;
 
         this.isParent = false;
+        this.isTreeFinish = false;
         this.ackCnt = 0;
         this.parent = null;
 
@@ -61,6 +64,18 @@ public class Node implements java.io.Serializable{
         return this.neighbors.size();
     }
 
+    public int getChildrenCnt() {
+        return this.children.size();
+    }
+
+     public ArrayList<Node> getChildren() {
+        return this.children;
+    }
+
+    public Node getParent() {
+        return this.parent;
+    }
+
     public int getQueueSize(){
         return this.queue.size();
     }
@@ -71,6 +86,10 @@ public class Node implements java.io.Serializable{
 
     public Boolean isParent(){
         return this.isParent;
+    }
+
+     public Boolean getIsTreeFinish(){
+        return this.isTreeFinish;
     }
 
     // public void setIsParent(Boolean value){
@@ -108,8 +127,16 @@ public class Node implements java.io.Serializable{
         return;
     }
 
+    public int getAckCnt(){
+        return this.ackCnt;
+    }
+
     public void setIsRoot(Boolean value){
         this.isRoot = value;
+    }
+
+    public void setIsTreeFinish(Boolean value){
+        this.isTreeFinish = value;
     }
 
     public void setNeiborNodes(ArrayList<Node> neighbors){
@@ -126,7 +153,7 @@ public class Node implements java.io.Serializable{
     }
 
     public void printConfig(){
-        System.out.println(String.format("-------Node %d Configuration-----", this.nodeId));
+        System.out.println(String.format("---------------------Node %d Configuration-----", this.nodeId));
         // Print hosts 
         // System.out.println("-----Host List-----");
         // for(Node node : hosts){

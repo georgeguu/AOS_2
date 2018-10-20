@@ -13,6 +13,9 @@ public class Server
     private static int nodeId;
     private static int portNum;
     private static long timeoutSec = 5;
+    public static volatile boolean ready;
+
+
     public static void main(String[] args) throws IOException
     {
 
@@ -21,7 +24,7 @@ public class Server
 
         if (args.length != 3)
         {
-            throw new IllegalArgumentException("Please enter port#, node ID and config file path");
+            throw new IllegalArgumentException("PleasGge enter port#, node ID and config file path");
         }
         
         portNum = Integer.parseInt(args[0]);
@@ -43,15 +46,24 @@ public class Server
         // Timeout for seconds
         timeout(timeoutSec);
 
-        if(myNode.isRoot())
-        {
-            myNode.setIsRoot(true);
+        if(myNode.isRoot()){
+            //myNode.setIsRoot(true);
             Thread clientT = new ClientHandler(myNode);
             clientT.start();
-        }else{
+            //System.out.println("The spinning tree has been built: "+myNode.getIsTreeFinish());
+            //Boolean a=false;
+            // while (!myNode.getIsTreeFinish()){
+            //     System.out.println("The spinning tree has been built in main: "+myNode.getIsTreeFinish());
+            // }
+            //System.out.println("The spinning tree has been built in main: "+myNode.getIsTreeFinish());
 
         }
-
+        // System.out.println("The spinning tree has been built in main: "+myNode.getIsTreeFinish());
+        // while (!myNode.getIsTreeFinish()){
+        //         System.out.println("The spinning tree has been built in main: "+myNode.getIsTreeFinish());
+        //     }
+        // System.out.println("The spinning tree has been built in main: "+myNode.getIsTreeFinish());
+        // System.out.println("please come.....................................................");
 
     }
     private static void timeout(long second){
@@ -129,34 +141,84 @@ class ServerThread extends Thread{
 
 
                 newComingObj = (Message) incomingMsg.readObject();
-                System.out.println("Received msg from: " + newComingObj.getOrigin().getNodeId() + ", Message: "+ newComingObj.getType());
-                // queue.add(newComingObj);
-                // newComingObj.getMsgAsString();
+                //System.out.println("Received msg from: " + newComingObj.getOrigin().getNodeId() + ", Message: "+ newComingObj.getType());
 
-                if(!myNode.isParent() && !myNode.isRoot()){
-                    System.out.println("Replied received msg to: " + newComingObj.getOrigin().getNodeId() + ", Message: PACK");
+                if ((String)newComingObj.getType().intern() != ("SpinningBroad").intern() && (String)newComingObj.getType().intern() != ("Broadcast").intern()){
+                    System.out.println("Received msg from: " + newComingObj.getOrigin().getNodeId() + ", Message: "+ newComingObj.getType());
+                    // queue.add(newComingObj);
+                    // newComingObj.getMsgAsString();
 
-                    myNode.setParent(newComingObj.getOrigin());
-                    myNode.popParentFromNeighbors(newComingObj.getOrigin());
-                    // System.out.println("After pop neiborhood num" + myNode.getNeighbors().size());
-                    Message msg = new Message(myNode, newComingObj.getOrigin(), "PACK");
-                    returnMsg.writeObject(msg);
+                    if(!myNode.isParent() && !myNode.isRoot()){
+                        System.out.println("Replied received msg to: " + newComingObj.getOrigin().getNodeId() + ", Message: PACK");
 
+                        myNode.setParent(newComingObj.getOrigin());
+                        myNode.popParentFromNeighbors(newComingObj.getOrigin());
+                        // System.out.println("After pop neiborhood num" + myNode.getNeighbors().size());
+                        Message msg = new Message(myNode, newComingObj.getOrigin(), "PACK");
+                        returnMsg.writeObject(msg);
+
+                        
+                        Thread clientH = new ClientHandler(myNode);
+                        clientH.start();
+                        
+                        //Brocast to neiborhood;
+
+                    }else if((String)newComingObj.getType().intern() != ("ACK").intern()){
+                        System.out.println("Replied received msg to: " + newComingObj.getOrigin().getNodeId() + ", Message: NACK");
+                        Message msg = new Message(myNode, newComingObj.getOrigin(), "NACK");
+                        returnMsg.writeObject(msg);                    
+                    }
+
+                    if((String)newComingObj.getType().intern() == ("ACK").intern()){
+                        myNode.incrementAck();
+                        System.out.println("Recieve an ACK");
+                        //System.out.println("The spinning tree has been built: "+myNode.getIsTreeFinish());
+                    }
+
+                    if(myNode.getAckCnt() == myNode.getChildrenCnt() && myNode.getChildrenCnt()!=0){
+                        if(!myNode.isRoot()){
+                        System.out.println("Ready to send a ACK to parent");
+                        Thread AckT = new AckThread(myNode);
+                        AckT.start();
+                        }
+                        else{
+                            myNode.setIsTreeFinish(true);
+                            
+                            System.out.println("---------------This node can start to broadcast------------ ");
+                            //System.out.println("The spinning tree has been built: "+myNode.getIsTreeFinish());
+                        }
+                    }
+
+                    if(myNode.isRoot() && myNode.getIsTreeFinish()){
+                        //System.out.println("The spinning tree has been built: "+myNode.getIsTreeFinish());
+                        System.out.println("---------------Start to broadcast spinning tree completion------------ ");
+                        Thread BroadT = new BroadThread(myNode);
+                        BroadT.start();
+                    }
+                    // returnMsg.writeChars("PACK");
+                    // returnMsg.flush();
                     
-                    Thread clientH = new ClientHandler(myNode);
-                    clientH.start();
-                    
-                    //Brocast to neiborhood;
+                    // myNode.printConfig();
 
-                }else{
-                    System.out.println("Replied received msg to: " + newComingObj.getOrigin().getNodeId() + ", Message: NACK");
-                    Message msg = new Message(myNode, newComingObj.getOrigin(), "NACK");
-                    returnMsg.writeObject(msg);                    
+                }else if ((String)newComingObj.getType().intern() == ("SpinningBroad").intern()){   // message type == SpinningBroad
+                    myNode.setIsTreeFinish(true);
+                    System.out.println("---------------Start to sending spinning tree completion------------ ");
+                    System.out.println("Received msg from: " + newComingObj.getOrigin().getNodeId() + ", Message: "+ newComingObj.getType());
+                    if(myNode.getChildrenCnt() != 0){
+                        Thread BroadT = new BroadThread(myNode);
+                        BroadT.start();
+                    }
+                    if(myNode.getIsTreeFinish()){
+                    System.out.println("---------------This node can start to broadcast------------ ");
+                    }
                 }
-                // returnMsg.writeChars("PACK");
-                // returnMsg.flush();
-                
-                // myNode.printConfig();
+
+                else if ((String)newComingObj.getType().intern() == ("Broadcast").intern()){
+                    System.out.println("Received msg from: " + newComingObj.getOrigin().getNodeId() + ", Message: "+ newComingObj.getType());
+                    // Thread BroadcastT = new Broadcast(myNode);
+                    // BroadcastT.start();
+                }
+
 
                 break;             
                   
@@ -290,7 +352,7 @@ class ClientHandler extends Thread
 
         // this.myNode.printConfig();
 
-        while(true){
+        //while(true){
             // if(numOfSendCnt == this.currentTable.getConfig().getNumOfNode()-1){
             //     // System.out.println("==========End=========");
             //     // System.out.println("For node:" + this.currentTable.getNodeId());
@@ -302,7 +364,13 @@ class ClientHandler extends Thread
                 System.out.println("********End*******");
                 this.myNode.printConfig();
                 // System.exit(0); 
-                return;
+                //return;
+            }
+
+            if(myNode.getChildrenCnt()==0){
+                System.out.println("---------------this node is the leaf");
+                Thread AckT = new AckThread(myNode);
+                AckT.start();
             }
             // fetchMsg = queue.poll();
             // if(fetchMsg == null){
@@ -326,7 +394,232 @@ class ClientHandler extends Thread
 
             //     }
             // }
+        //}
+
+    }
+
+} 
+
+class AckThread extends Thread  
+{ 
+    // private RoutingTable currentTable;
+    private Node targetNode;
+    private Socket socket = null;
+    private ObjectInputStream inputStream = null;
+    private ObjectOutputStream outputStream = null;
+    private boolean isConnected = false;
+    Node myNode;
+    // private static int neiborhoodNum;
+    // ConcurrentLinkedQueue<Message> queue;
+    // private sendCount;
+  
+    // Constructor 
+    //Message response;
+    public AckThread(Node myNode)  
+    { 
+        this.myNode = myNode;
+    } 
+    public void sendMsg(Message msg){
+        targetNode = msg.getDestination();
+        try{
+            // currentTable.getMsg().setDestination(targetNode);
+            try {
+                socket = new Socket(targetNode.getHostName(), targetNode.getPort());
+                isConnected = true;
+                outputStream = new ObjectOutputStream(socket.getOutputStream());
+                outputStream.writeObject(msg);
+
+            } catch (SocketException se) {
+                se.printStackTrace();
+                System.out.println("Connection fail, not able connect to : " + targetNode.getHostName());
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }catch (NullPointerException e){
+            System.out.println("table is null");
         }
+
+
+        return;
+    }
+    
+    @Override
+    public void run()  
+    {
+        
+        System.out.println("Send ACK to: "+ myNode.getParent().getNodeId());
+
+        Node targetNode = this.myNode.getParent();
+        Message ackMessage = new Message(myNode, targetNode, "ACK");
+        sendMsg(ackMessage);
+
+        // this.myNode.printConfig();
+
+        //while(true){
+            // if(numOfSendCnt == this.currentTable.getConfig().getNumOfNode()-1){
+            //     // System.out.println("==========End=========");
+            //     // System.out.println("For node:" + this.currentTable.getNodeId());
+            //     // System.out.println("Your result: "+ Arrays.toString(this.currentTable.getMsg().getDistance()));
+            //     // return;
+
+            // }
+           
+        //}
+
+    }
+
+} 
+
+class BroadThread extends Thread  
+{ 
+    // private RoutingTable currentTable;
+    private Node targetNode;
+    private Socket socket = null;
+    private ObjectInputStream inputStream = null;
+    private ObjectOutputStream outputStream = null;
+    private boolean isConnected = false;
+    Node myNode;
+    // private static int neiborhoodNum;
+    // ConcurrentLinkedQueue<Message> queue;
+    // private sendCount;
+  
+    // Constructor 
+    //Message response;
+    public BroadThread(Node myNode)  
+    { 
+        this.myNode = myNode;
+    } 
+    public void sendMsg(Message msg){
+        targetNode = msg.getDestination();
+        try{
+            // currentTable.getMsg().setDestination(targetNode);
+            try {
+                socket = new Socket(targetNode.getHostName(), targetNode.getPort());
+                isConnected = true;
+                outputStream = new ObjectOutputStream(socket.getOutputStream());
+                outputStream.writeObject(msg);
+
+            } catch (SocketException se) {
+                se.printStackTrace();
+                System.out.println("Connection fail, not able connect to : " + targetNode.getHostName());
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }catch (NullPointerException e){
+            System.out.println("table is null");
+        }
+
+
+        return;
+    }
+    
+    @Override
+    public void run()  
+    {
+        
+        for(int i = 0;i < this.myNode.getChildrenCnt(); i++){
+            System.out.println("Send spinning tree broadcast meg to: "+ myNode.getChildren().get(i).getNodeId());
+
+            Node targetNode = this.myNode.getChildren().get(i);
+            Message msg = new Message(myNode, targetNode, "SpinningBroad");
+            sendMsg(msg);
+
+        }
+
+        // this.myNode.printConfig();
+
+        //while(true){
+            // if(numOfSendCnt == this.currentTable.getConfig().getNumOfNode()-1){
+            //     // System.out.println("==========End=========");
+            //     // System.out.println("For node:" + this.currentTable.getNodeId());
+            //     // System.out.println("Your result: "+ Arrays.toString(this.currentTable.getMsg().getDistance()));
+            //     // return;
+
+            // }
+           
+        //}
+
+    }
+
+} 
+
+class Broadcast extends Thread  
+{ 
+    // private RoutingTable currentTable;
+    private Node targetNode;
+    private Socket socket = null;
+    private ObjectInputStream inputStream = null;
+    private ObjectOutputStream outputStream = null;
+    private boolean isConnected = false;
+    Node myNode;
+    // private static int neiborhoodNum;
+    // ConcurrentLinkedQueue<Message> queue;
+    // private sendCount;
+  
+    // Constructor 
+    //Message response;
+    public Broadcast(Node myNode)  
+    { 
+        this.myNode = myNode;
+    } 
+    public void sendMsg(Message msg){
+        targetNode = msg.getDestination();
+        try{
+            // currentTable.getMsg().setDestination(targetNode);
+            try {
+                socket = new Socket(targetNode.getHostName(), targetNode.getPort());
+                isConnected = true;
+                outputStream = new ObjectOutputStream(socket.getOutputStream());
+                outputStream.writeObject(msg);
+
+            } catch (SocketException se) {
+                se.printStackTrace();
+                System.out.println("Connection fail, not able connect to : " + targetNode.getHostName());
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }catch (NullPointerException e){
+            System.out.println("table is null");
+        }
+
+
+        return;
+    }
+    
+    @Override
+    public void run()  
+    {
+        
+        for(int i = 0;i < this.myNode.getChildrenCnt(); i++){
+            System.out.println("Send broadcast type meg to: "+ myNode.getChildren().get(i).getNodeId());
+
+            Node targetNode = this.myNode.getChildren().get(i);
+            Message msg = new Message(myNode, targetNode, "Broadcast");
+            sendMsg(msg);
+
+        }
+
+        System.out.println("Send broadcast type meg to: "+ myNode.getParent().getNodeId());
+
+        Node targetNode = this.myNode.getParent();
+        Message msg = new Message(myNode, targetNode, "Broadcast");
+        sendMsg(msg);
+
+        // this.myNode.printConfig();
+
+        //while(true){
+            // if(numOfSendCnt == this.currentTable.getConfig().getNumOfNode()-1){
+            //     // System.out.println("==========End=========");
+            //     // System.out.println("For node:" + this.currentTable.getNodeId());
+            //     // System.out.println("Your result: "+ Arrays.toString(this.currentTable.getMsg().getDistance()));
+            //     // return;
+
+            // }
+           
+        //}
 
     }
 
