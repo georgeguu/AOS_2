@@ -12,6 +12,7 @@ import java.io.Serializable;
 
 public class Message implements Serializable{
 
+    private Node source;
     private Node origin;
     private Node destination;
     // int [] distance;
@@ -25,6 +26,22 @@ public class Message implements Serializable{
         this.destination = newDst;
         this.type = str.getBytes();
 
+    }
+    
+    /*
+     * Overloaded constructor for broadcast/convergecast(Part 2)
+     * */
+    public Message(Node newSrc, Node newOrg, Node newDst, String str)
+    {
+    	this.source = newSrc;
+    	this.origin = newOrg;
+        this.destination = newDst;
+        this.type = str.getBytes();
+    }
+    
+    public Node getSource()
+    {
+    	return this.source;
     }
 
     public Node getOrigin(){
