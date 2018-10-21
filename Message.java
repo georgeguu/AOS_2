@@ -12,14 +12,13 @@ import java.io.Serializable;
 
 public class Message implements Serializable{
 
-    private Node source;
-    private Node origin;
+	private Node source;
+	private Node origin;
     private Node destination;
-    // int [] distance;
     private byte[] type;
-    // public int[] getDistance(){
-    //     return this.distance;
-    // }
+    private int ackCounter;
+    
+    
     public Message(Node newOrg, Node newDst, String str)
     {   
         this.origin = newOrg;
@@ -37,6 +36,18 @@ public class Message implements Serializable{
     	this.origin = newOrg;
         this.destination = newDst;
         this.type = str.getBytes();
+        this.ackCounter = 0;
+    }
+    
+    public int getackCounter()
+    {
+    	return this.ackCounter;
+    }
+    
+    public void setackCounter(int i)
+    {
+    	this.ackCounter = i;
+    	
     }
     
     public Node getSource()
@@ -62,15 +73,6 @@ public class Message implements Serializable{
 
         return;
     }
-    // public void setDestination(Node destination){
-    //     this.destination = destination;
-    //     // System.out.println("after setting new dest:" + this.destination.getNodeId());
-    //     return;
-    // }
-    // public void setDistance(int[] newDistance){
-    //     this.distance = newDistance;
-    //     return;
-    // }
 
 }
 
