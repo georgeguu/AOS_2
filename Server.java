@@ -545,82 +545,85 @@ class BroadThread extends Thread
 
 } 
 
-class Broadcast extends Thread  
-{ 
-    // private RoutingTable currentTable;
-    private Node targetNode;
-    private Socket socket = null;
-    private ObjectInputStream inputStream = null;
-    private ObjectOutputStream outputStream = null;
-    private boolean isConnected = false;
-    Node myNode;
-    // private static int neiborhoodNum;
-    // ConcurrentLinkedQueue<Message> queue;
-    // private sendCount;
-  
-    // Constructor 
-    //Message response;
-    public Broadcast(Node myNode)  
-    { 
-        this.myNode = myNode;
-    } 
-    public void sendMsg(Message msg){
-        targetNode = msg.getDestination();
-        try{
-            // currentTable.getMsg().setDestination(targetNode);
-            try {
-                socket = new Socket(targetNode.getHostName(), targetNode.getPort());
-                isConnected = true;
-                outputStream = new ObjectOutputStream(socket.getOutputStream());
-                outputStream.writeObject(msg);
+class Broadcast extends Thread {
+	// private RoutingTable currentTable;
+	private Node targetNode;
+	private Socket socket = null;
+	private ObjectInputStream inputStream = null;
+	private ObjectOutputStream outputStream = null;
+	private boolean isConnected = false;
+	Node myNode;
+	ConcurrentHashMap<Node, Message> broadQueue;
+	Message message;
+	// private static int neiborhoodNum;
+	// ConcurrentLinkedQueue<Message> queue;
+	// private sendCount;
 
-            } catch (SocketException se) {
-                se.printStackTrace();
-                System.out.println("Connection fail, not able connect to : " + targetNode.getHostName());
+	// Constructor
+	// Message response;
+	// public Broadcast(Node myNode) {
+	// this.myNode = myNode;
+	// }
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }catch (NullPointerException e){
-            System.out.println("table is null");
-        }
+	/*public Broadcast(Node myNode, ConcurrentHashMap<Node, Message> queue) {
+		this.myNode = myNode;
+		this.broadQueue = queue;
+	}*/
 
+	public Broadcast(Node myNode, ConcurrentHashMap<Node, Message> queue, Message msg) {
+		this.myNode = myNode;
+		this.broadQueue = queue;
+		this.message = msg;
+	}
 
-        return;
-    }
-    
-    @Override
-    public void run()  
-    {
-        
-        for(int i = 0;i < this.myNode.getChildrenCnt(); i++){
-            System.out.println("Send broadcast type meg to: "+ myNode.getChildren().get(i).getNodeId());
+	public void sendMsg(Message msg) {
+		targetNode = msg.getDestination();
+		try {
+			// currentTable.getMsg().setDestination(targetNode);
+			try {
+				socket = new Socket(targetNode.getHostName(), targetNode.getPort());
+				isConnected = true;
+				outputStream = new ObjectOutputStream(socket.getOutputStream());
+				outputStream.writeObject(msg);
 
-            Node targetNode = this.myNode.getChildren().get(i);
-            Message msg = new Message(myNode, targetNode, "Broadcast");
-            sendMsg(msg);
+			} catch (SocketException se) {
+				se.printStackTrace();
+				System.out.println("Connection fail, not able connect to : " + targetNode.getHostName());
 
-        }
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} catch (NullPointerException e) {
+			System.out.println("table is null");
+		}
 
-        System.out.println("Send broadcast type meg to: "+ myNode.getParent().getNodeId());
+		return;
+	}
 
-        Node targetNode = this.myNode.getParent();
-        Message msg = new Message(myNode, targetNode, "Broadcast");
-        sendMsg(msg);
+	@Override
+	public void run() {
 
-        // this.myNode.printConfig();
+		// Broadcasts to all the children except the message sender node
+		for (int i = 0; i < this.myNode.getChildrenCnt(); i++) {
 
-        //while(true){
-            // if(numOfSendCnt == this.currentTable.getConfig().getNumOfNode()-1){
-            //     // System.out.println("==========End=========");
-            //     // System.out.println("For node:" + this.currentTable.getNodeId());
-            //     // System.out.println("Your result: "+ Arrays.toString(this.currentTable.getMsg().getDistance()));
-            //     // return;
+			if (this.myNode.getChildren().get(i).getNodeId() != message.getSource().getNodeId()) {
+				System.out.println("Send broadcast type msg to: " + myNode.getChildren().get(i).getNodeId());
 
-            // }
-           
-        //}
+				Node targetNode = this.myNode.getChildren().get(i);
+				Message msg = new Message(message.getSource(), myNode, targetNode, "Broadcast");
+				sendMsg(msg);
+			}
 
-    }
+		}
 
+		// Broadcasts to the parent except the message sender node
+		if (this.myNode.getParent().getNodeId() != message.getSource().getNodeId()) {
+			System.out.println("Send broadcast type msg to: " + myNode.getParent().getNodeId());
+
+			Node targetNode = this.myNode.getParent();
+			Message msg = new Message(message.getSource(), myNode, targetNode, "Broadcast");
+			sendMsg(msg);
+		}
+
+	}
 } 
