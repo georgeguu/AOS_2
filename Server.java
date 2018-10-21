@@ -20,7 +20,7 @@ public class Server
     {
 
         // ConcurrentLinkedQueue<Message> queue = new ConcurrentLinkedQueue<Message>();
-
+        ConcurrentHashMap<Node, Message> broadQueue = new ConcurrentHashMap<Node, Message>();
 
         if (args.length != 3)
         {
@@ -40,15 +40,15 @@ public class Server
 
 
 
-        Thread serverFactory = new ServerFactory(myNode);
-        serverFactory.start();
+        Thread serverFactory = new ServerFactory(myNode, broadQueue);
+		serverFactory.start();
 
         // Timeout for seconds
         timeout(timeoutSec);
 
         if(myNode.isRoot()){
             //myNode.setIsRoot(true);
-            Thread clientT = new ClientHandler(myNode);
+            Thread clientT = new ClientHandler(myNode, broadQueue);
             clientT.start();
             //System.out.println("The spinning tree has been built: "+myNode.getIsTreeFinish());
             //Boolean a=false;
@@ -81,36 +81,38 @@ class ServerFactory extends Thread{
     private static int portNum;
     private static int neiborhoodNum;
     Node myNode;
+    ConcurrentHashMap<Node, Message> broadQueue;
+    
     public ServerFactory(Node myNode)  
     { 
         this.myNode = myNode;
     } 
-    @Override
-    public void run()
-    {
-        try{
-            ServerSocket ss = new ServerSocket(this.myNode.getPort());
-            while (true)  
-            { 
-                Socket s = null; 
-                try 
-                { 
-                    s = ss.accept(); 
-                    Thread serverT = new ServerThread(s, ss, this.myNode);
-                    serverT.start();
-                } 
-                catch (Exception e){ 
-                    s.close(); 
-                    e.printStackTrace(); 
-                }
-            }
-        }
-        catch(IOException e){
-            System.out.println("Can not open socket, port Number is not correct" + this.myNode.getPort());
+    public ServerFactory(Node myNode, ConcurrentHashMap queue) {
+		this.myNode = myNode;
+		this.broadQueue = queue;
+	}
+    
+	@Override
+	public void run() {
+		try {
+			ServerSocket ss = new ServerSocket(this.myNode.getPort());
+			while (true) {
+				Socket s = null;
+				try {
+					s = ss.accept();
+					Thread serverT = new ServerThread(s, ss, this.myNode, broadQueue);
+					serverT.start();
+				} catch (Exception e) {
+					s.close();
+					e.printStackTrace();
+				}
+			}
+		} catch (IOException e) {
+			System.out.println("Can not open socket, port Number is not correct" + this.myNode.getPort());
 
-        }      
-                
-    } 
+		}
+
+	}
 }
 
 class ServerThread extends Thread{
@@ -119,6 +121,8 @@ class ServerThread extends Thread{
     Node myNode;
     Socket s; 
     ServerSocket ss;
+    ConcurrentHashMap<Node, Message> broadQueue;
+    
 
     Message newComingObj;
     public ServerThread(Socket s, ServerSocket ss, Node myNode)  
@@ -127,6 +131,15 @@ class ServerThread extends Thread{
         this.ss = ss;
         this.myNode = myNode;
     } 
+    
+    public ServerThread(Socket s, ServerSocket ss, Node myNode, ConcurrentHashMap<Node, Message> queue) {
+		this.s = s;
+		this.ss = ss;
+		this.myNode = myNode;
+		this.broadQueue = queue;
+
+	}
+    
     @Override
     public void run()  
     {
@@ -211,13 +224,15 @@ class ServerThread extends Thread{
                     if(myNode.getIsTreeFinish()){
                     System.out.println("---------------This node can start to broadcast------------ ");
                     }
-                }
+                }else if ((String) newComingObj.getType().intern() == ("Broadcast").intern()) {
+					System.out.println("Received msg from: " + newComingObj.getOrigin().getNodeId() + ", Message: "
+							+ newComingObj.getType());
 
-                else if ((String)newComingObj.getType().intern() == ("Broadcast").intern()){
-                    System.out.println("Received msg from: " + newComingObj.getOrigin().getNodeId() + ", Message: "+ newComingObj.getType());
-                    // Thread BroadcastT = new Broadcast(myNode);
-                    // BroadcastT.start();
-                }
+					broadQueue.put(newComingObj.getSource(), newComingObj);
+					Thread BroadcastT = new Broadcast(myNode, broadQueue, newComingObj);
+					BroadcastT.start();
+				}
+
 
 
                 break;             
@@ -256,6 +271,7 @@ class ClientHandler extends Thread
     private ObjectOutputStream outputStream = null;
     private boolean isConnected = false;
     Node myNode;
+    ConcurrentHashMap<Node, Message> broadQueue;
     // private static int neiborhoodNum;
     // ConcurrentLinkedQueue<Message> queue;
     // private sendCount;
@@ -266,6 +282,12 @@ class ClientHandler extends Thread
     { 
         this.myNode = myNode;
     } 
+    
+    public ClientHandler(Node myNode, ConcurrentHashMap<Node, Message> queue) {
+		this.myNode = myNode;
+		this.broadQueue = queue;
+	}
+    
     public void sendMsg(Message msg){
         targetNode = msg.getDestination();
         try{
@@ -409,6 +431,7 @@ class AckThread extends Thread
     private ObjectOutputStream outputStream = null;
     private boolean isConnected = false;
     Node myNode;
+    Message msg;
     // private static int neiborhoodNum;
     // ConcurrentLinkedQueue<Message> queue;
     // private sendCount;
@@ -419,6 +442,11 @@ class AckThread extends Thread
     { 
         this.myNode = myNode;
     } 
+    
+    public AckThread(Node myNode, Message replyBroad) {
+		this.myNode = myNode;
+		this.msg = replyBroad;
+	
     public void sendMsg(Message msg){
         targetNode = msg.getDestination();
         try{
