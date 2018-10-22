@@ -212,6 +212,52 @@ class ServerThread extends Thread{
                     // returnMsg.flush();
                     
                     // myNode.printConfig();
+                    
+                    
+                    if (myNode.getIsTreeFinish())  
+					{
+						// Increments the counter for # of ack receive for a broadcast msg
+						temp = broadQueue.get(newComingObj.getSource());
+						temp.setackCounter(temp.getackCounter() + 1);
+						broadQueue.replace(newComingObj.getSource(), temp);
+
+						if ((myNode.isParent() && myNode.isRoot())) // If it is a root 
+						{
+							if (temp.getackCounter() == myNode.getChildrenCnt() - 1) {
+
+								System.out.println("Sending msg to: " + temp.getOrigin().getNodeId() + ", Message: "
+										+ temp.getType() + " For source Node" + temp.getSource().getNodeId());
+
+								Thread AckT = new AckThread(myNode, temp);
+								AckT.start();
+								broadQueue.remove(newComingObj.getSource());
+
+							}
+						} else if (myNode.isParent()) // If it is an intermediate node
+						{
+							if (temp.getackCounter() == (myNode.getChildrenCnt() + 1) - 1) {
+
+								System.out.println("Sending msg to: " + temp.getOrigin().getNodeId() + ", Message: "
+										+ temp.getType() + " For source Node" + temp.getSource().getNodeId());
+
+								Thread AckT = new AckThread(myNode, temp);
+								AckT.start();
+								broadQueue.remove(newComingObj.getSource());
+							}
+						} else //else it is a leaf node 
+						{
+							if (temp.getackCounter() == 0) {
+
+								System.out.println("Sending msg to: " + temp.getOrigin().getNodeId() + ", Message: "
+										+ temp.getType() + " For source Node" + temp.getSource().getNodeId());
+
+								Thread AckT = new AckThread(myNode, temp);
+								AckT.start();
+								broadQueue.remove(newComingObj.getSource());
+							}
+						}
+					}
+
 
                 }else if ((String)newComingObj.getType().intern() == ("SpinningBroad").intern()){   // message type == SpinningBroad
                     myNode.setIsTreeFinish(true);
