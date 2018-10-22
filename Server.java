@@ -1,10 +1,11 @@
-/ package bin;
+package bin;
 import bin.Node;
 import bin.Parseconfig;
 import bin.Message;
 import java.io.*;
 import java.text.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.net.*;
 
 // Server class
@@ -87,7 +88,7 @@ class ServerFactory extends Thread{
     { 
         this.myNode = myNode;
     } 
-    public ServerFactory(Node myNode, ConcurrentHashMap queue) {
+    public ServerFactory(Node myNode, ConcurrentHashMap<Node, Message> queue) {
 		this.myNode = myNode;
 		this.broadQueue = queue;
 	}
@@ -125,6 +126,7 @@ class ServerThread extends Thread{
     
 
     Message newComingObj;
+    Message temp;
     public ServerThread(Socket s, ServerSocket ss, Node myNode)  
     { 
         this.s = s;
@@ -492,6 +494,7 @@ class AckThread extends Thread
     public AckThread(Node myNode, Message replyBroad) {
 		this.myNode = myNode;
 		this.msg = replyBroad;
+    }
 	
     public void sendMsg(Message msg){
         targetNode = msg.getDestination();
