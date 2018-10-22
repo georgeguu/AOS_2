@@ -694,7 +694,7 @@ class Broadcast extends Thread {
 		}
 
 		// Broadcasts to the parent except the message sender node
-		if (this.myNode.getParent().getNodeId() != message.getSource().getNodeId()) {
+		if ((this.myNode.getParent() != null) && (this.myNode.getParent().getNodeId() != message.getSource().getNodeId())) {
 			System.out.println("Send broadcast type msg to: " + myNode.getParent().getNodeId());
 
 			Node targetNode = this.myNode.getParent();
