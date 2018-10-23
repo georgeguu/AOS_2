@@ -1,4 +1,4 @@
-package bin;
+//package bin;
 import bin.Node;
 import bin.Parseconfig;
 import bin.Message;
