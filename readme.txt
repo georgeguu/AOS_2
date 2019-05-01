@@ -27,8 +27,3 @@ if there is an error message ")syntax error: invalid arithmetic operator (error 
 	
 if there is an error when running compile.sh
     edit a new compile.sh
-
-
-
-	
-   
