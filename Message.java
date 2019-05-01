@@ -27,6 +27,15 @@ public class Message implements Serializable{
 
     }
     
+    @Override
+    public Message clone(){
+    	  try {
+    	        return (Message) super.clone();
+    	      }catch (CloneNotSupportedException e) {
+    	         return new Message(this.source,this.origin,this.destination, this.type, this.ackCounter);
+    	     }
+    	}
+    
     /*
      * Overloaded constructor for broadcast/convergecast(Part 2)
      * */
@@ -39,15 +48,28 @@ public class Message implements Serializable{
         this.ackCounter = 0;
     }
     
+    public Message(Node newSrc, Node newOrg, Node newDst, byte[] type, int ackCount)
+    {
+    	this.source = newSrc;
+    	this.origin = newOrg;
+        this.destination = newDst;
+        this.type = type;
+        this.ackCounter = ackCount;
+    }
+    
+    public void resetAckCounter() {
+    	this.ackCounter=0;
+    }
+    
+    
     public int getackCounter()
     {
     	return this.ackCounter;
     }
     
-    public void setackCounter(int i)
+    public void ackCounterPP()
     {
-    	this.ackCounter = i;
-    	
+    	this.ackCounter= this.ackCounter + 1;    	
     }
     
     public Node getSource()
